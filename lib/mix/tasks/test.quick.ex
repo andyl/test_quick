@@ -1,8 +1,6 @@
 defmodule Mix.Tasks.Test.Quick do
   use Mix.Task
 
-  @timestamp_file "priv/.last_fulltest_run"
-
   @shortdoc "Run tests if source has changed since last successful full test run"
 
   def run(args) do
@@ -24,6 +22,11 @@ defmodule Mix.Tasks.Test.Quick do
     end
   end
 
+  defp timestamp_file do
+    app = Mix.Project.config()[:app]
+    "/tmp/test_quick_#{app}_timestamp.txt"
+  end
+
   defp should_run_tests? do
     case {get_latest_source_mod_time(), get_last_test_time()} do
       {_source_time, nil} ->
@@ -42,7 +45,7 @@ defmodule Mix.Tasks.Test.Quick do
   end
 
   defp get_last_test_time do
-    case File.read(@timestamp_file) do
+    case File.read(timestamp_file()) do
       {:ok, content} -> NaiveDateTime.from_iso8601!(String.trim(content))
       {:error, _} -> nil
     end
@@ -58,6 +61,6 @@ defmodule Mix.Tasks.Test.Quick do
 
   defp write_timestamp do
     timestamp = NaiveDateTime.utc_now() |> NaiveDateTime.to_string()
-    File.write(@timestamp_file, timestamp)
+    File.write(timestamp_file(), timestamp)
   end
 end
